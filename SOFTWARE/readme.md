@@ -16,3 +16,4 @@ Los ejemplos disponibles son los siguientes:
 - **MIDI_CTRL2.c**:El sistema funciona como un controlador MIDI interpuesto entre un teclado y un sintetizador. Cuando recibe una nota, la retransmite, pudiendo modificar la nota, el valor de la velocidad y el pitch. También podrá incluir mensajes de Pedal Sustain On/Off.
 - **MIDI_SYNTH1.c**: Funciona como sintetizador aditivo básico, sumando cualquiera de las formas almacenadas, pudiendo variar en el momento de la suma su amplitud y fase
 - **MIDI_SYNTH2.C**: versión del anterior, incorporando la modulación ADSR. Se pueden variar los parámetros de tiempos de ataque, decay, release y valor de Sustain.  
+- **MIDI_SYNTH3.C**: Versión del anterior, incorporando la posibilidad de grabar formas de onda ya mezcladas y recuperarlas más adelante. Hace uso de la memoria FRAM del dispositivo, y cambia ligeramente el uso de los vectores de forma de onda.
