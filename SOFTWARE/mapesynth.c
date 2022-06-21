@@ -2,20 +2,42 @@
 #include <mapesynth.h>
 #include <msp430.h>
 #include "nokia5110.h"
-
+#include "formas.h"
 
 int n, N_MAX, N_M[8]={3,3,3,3,2,2,3,3};
-char Buff[6];
+char Buff[12];
 char Msg=0;
 
 int Slider1, Slider2, Pot1, Pot2;
 char Cambio_SL1,Cambio_SL2,Cambio_POT1,Cambio_POT2,Cambio_x,Cambio_y;
 unsigned int JOY_X=0, JOY_Y=0, SL1=0, SL2=0, ROT1=0, ROT2=0;
 int t=0;
-char GATE[]={0,0,0,0};
-char TRIG[]={0,0,0,0};
+volatile char GATE[]={0,0,0,0};
+volatile char TRIG[]={0,0,0,0};
 
 volatile int Enc_val=0;
+int *Save_Wave= (int *)0x6000;
+int *Instrum[12];
+int copia_ondas(void)
+{
+   char i,j;
+   for (i=0;i<NUMINST;i++)
+   {
+       Instrum[i]=SAMPLES[i];
+   }
+   for (i=0;i<4;i++)
+      {
+       if(Save_Wave[i*128]!=0xffff)
+       {
+           Instrum[NUMINST+i]= (int*)(Save_Wave + i*128);
+       }
+       else
+       {
+           break;
+       }
+      }
+   return(NUMINST+i);
+}
 
 void manda_midi( char *msg)
 {
@@ -72,6 +94,7 @@ void HAL_conf_MC(void){
     P4REN |=BIT7;       //B3
     P4OUT |=BIT7;
 
+    P1DIR |= BIT0; //P1.0 para señalizar
     /****************************
      * INterrupción del encoder en P4.1
      *
@@ -174,12 +197,12 @@ void HAL_conf_MC(void){
         UCB1CTLW0 |= UCMST | UCSYNC | UCCKPL | UCMSB; // 3-pin, 8-bit SPI master
                                                 // Clock polarity high, MSB
         UCB1CTLW0 |= UCSSEL__SMCLK;              // ACLK
-        UCB1BRW = 0x01;                         // /2
+        UCB1BRW = 0x00;                         // /2
         //UCB1MCTLW = 0;                          // No modulation
         UCB1CTLW0 &= ~UCSWRST;                  // **Initialize USCI state machine**
 }
 
-
+char Msg_Rx[3];
 #pragma vector=EUSCI_A3_VECTOR
 __interrupt void INterrupcion_RX_A3(void)
 {
@@ -191,9 +214,14 @@ __interrupt void INterrupcion_RX_A3(void)
         n=0;
         N_MAX=N_M[((Buf_RX>>4)&0x07)];
     }
-    Buff[n]=Buf_RX;
+    Msg_Rx[n]=Buf_RX;
     n++;
-    if(n==N_MAX)Msg=1;
+    if(n==N_MAX){
+        Msg=1;
+        Buff[0]=Msg_Rx[0];
+        Buff[1]=Msg_Rx[1];
+        Buff[2]=Msg_Rx[2];
+    }
 }
 
 void lee_botones(void)
@@ -392,19 +420,32 @@ __interrupt void ADC12_ISR(void)
     }
 }
 
-int dac;
+//int dac;
+
+void saca_dac(int dac)
+{
+    P5OUT &= ~BIT1; //CSLOW
+    UCB1TXBUF = 0x70+(dac>>8);  // Manda MSB y bits de conf.
+    UCB1TXBUF = dac&0x00ff;     // manda LSB
+    while(!(UCB1IFG&UCTXIFG));
+    P5OUT |=BIT1;  //CSHIGH
+}
+
+volatile int LOAD=0;
 
 #pragma vector=TIMER1_A0_VECTOR
-__interrupt void VCO(void)
+__interrupt void VCO_INT(void)
 {
     P1OUT|=BIT0;
-    dac=calcula_dac();
+    VCO();
+    /*    dac=calcula_dac();
     P5OUT &= ~BIT1;
                       UCB1TXBUF = 0x70+(dac>>8);                   // Transmit characters
                       UCB1TXBUF = dac&0x00ff;                   // Transmit characters
                       while(!(UCB1IFG&UCTXIFG));
-                      P5OUT |=BIT1;
-                      P1OUT &=~BIT0;
+                      P5OUT |=BIT1;*/
+    P1OUT &=~BIT0;
+    LOAD= TA1R>>3;  //Carga en %
 }
 
 

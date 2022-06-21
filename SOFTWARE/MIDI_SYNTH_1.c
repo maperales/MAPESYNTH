@@ -44,6 +44,7 @@ signed char valor_param, par_act=0;
 char nombre_param[]="ADSR";
 
 
+
 void normaliza(int *vector) //Normaliza las formas de onda a un máximo de (510, -510) para evitar saturaciones
 {
     int i, max=0;
@@ -91,6 +92,14 @@ int calcula_dac(void)   //Cálculo de la salida del DAC
 }
 
 
+
+
+void VCO(void)
+{
+    int dac;
+    dac=calcula_dac();
+    saca_dac(dac);
+}
 
 
 void calcula_modo(void)
@@ -153,13 +162,13 @@ int main(void)
 
         if(modo==FORMA)     //Único modo disponible en este ejemplo
         {
-            if(GATE[1] && TRIG[1])  //Selecciona siguiente instrumento
+            if(GATE[1] && TRIG[1])
             {
                 TRIG[1]=0;
                 inst++;
                 if(inst>=NUMINST)inst=0;
             }
-            if(GATE[0] && TRIG[0])  //Selecciona instrumento anterior
+            if(GATE[0] && TRIG[0])
             {
                 TRIG[0]=0;
                 if(inst!=0){
@@ -171,7 +180,7 @@ int main(void)
                 }
 
             }
-            if(GATE[3] && TRIG[3])  //añade instrumento a la suma
+            if(GATE[3] && TRIG[3])
             {
                 TRIG[3]=0;
                 Mezcla[inst]=1;
@@ -179,7 +188,7 @@ int main(void)
                 Fase[inst]=SL2;
                 calcula_onda();
             }
-            if(GATE[2] && TRIG[2])  //Quita instrumento de la suma
+            if(GATE[2] && TRIG[2])
             {
                 TRIG[2]=0;
                 Mezcla[inst]=0;
@@ -199,13 +208,13 @@ int main(void)
             }
             escribe(0,5,cadena);
         }
-        if(modo==ADSR)
+        if(modo==ADSR)  //Desarrollado en MIDI_SYNTH_2
         {
             escribe(0, 1, "Modo ADSR");
 
             escribe(0, 3, "T.B.D.");
         }
-        if(modo==EFECTO)
+        if(modo==EFECTO)    //FUTUROS DESARROLLOS
         {
             escribe(0, 1, "Modo Efecto");
 

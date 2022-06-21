@@ -92,12 +92,12 @@ void HAL_conf_MC(void);
 
 extern char Cambio_SL1,Cambio_SL2,Cambio_POT1,Cambio_POT2,Cambio_x,Cambio_y;
 extern unsigned int JOY_X, JOY_Y, SL1, SL2, ROT1, ROT2;
-extern char GATE[], TRIG[];
+extern volatile char GATE[], TRIG[];
 extern int t;
-extern char Buff[6];
+extern char Buff[12];
 extern char Msg;
 extern volatile int Enc_val;
-
+extern volatile int LOAD;
 
 void espera_boton(void);
 void HAL_habilita_ints(void);
@@ -105,6 +105,12 @@ void HAL_conf_VCO(void);
 void HAL_conf_LFO(void);
 int calcula_dac(void);
 void LFO(void);
+void VCO(void);
+void saca_dac(int dac);
+int copia_ondas(void);
+
+extern int* Instrum[12];
+extern int *Save_Wave;
 
 
 #endif /* MAPESYNTH_H_ */
