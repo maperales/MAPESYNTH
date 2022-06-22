@@ -21,7 +21,7 @@ char Msg_Midi[3];
 
 int main(int argc, char *argv[])
 {
-    char nota_act;
+    char nota_act, Comm;
     HAL_conf_MC();
     initLCD();
     clearLCD();
@@ -44,7 +44,8 @@ int main(int argc, char *argv[])
             sprintf(cadena," IN:%02X-%02X-%02X " ,Buff[0],Buff[1],Buff[2]);
             escribe(0,1,cadena);
             Msg=0;
-            if((Buff[0]==0x90) && (Buff[2]!=0))	//NOTE ON
+            Comm=Buff[0]&0xF0;
+            if((Comm==0x90) && (Buff[1]!=0))	//NOTE ON
             {
                 Msg_Midi[0]=Buff[0];
                 nota_act=Buff[1]+(SL1*13)/127;
@@ -53,7 +54,7 @@ int main(int argc, char *argv[])
                 manda_midi(Msg_Midi);
                 sprintf(cadena,"OUT:%02X-%02X-%02X " ,Msg_Midi[0],Msg_Midi[1],Msg_Midi[2]);
             }
-            else if((Buff[0]==0x80) || (Buff[0]==0x90 && Buff[2]==0))  //NOTE OFF
+            else if((Comm==0x80) || (Comm==0x90 && Buff[2]==0))  //NOTE OFF
             {
                 Msg_Midi[1]=Buff[1]+(SL1*13)/127;
                 Msg_Midi[0]=0x80;
@@ -76,7 +77,7 @@ int main(int argc, char *argv[])
             Msg_Midi[2]=JOY_Y;
             manda_midi(Msg_Midi);
             sprintf(cadena,"OUT:%02X-%02X-%02X " ,Msg_Midi[0],Msg_Midi[1],Msg_Midi[2]);
-            escribe(0,3,cadena);
+            escribe(0,2,cadena);
         }
         /*********************************
          * Pedal de Sustain en el boton 1.
