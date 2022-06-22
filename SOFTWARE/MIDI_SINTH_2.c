@@ -118,7 +118,7 @@ void LFO(void)  //LFO: Aplicación del ADSR
             nota=0;
         }
     }
-    Amp_int=(int)(Amp/10.0);
+    Amp_int=(int)(Amp/20.0);
 }
 
 
@@ -130,7 +130,7 @@ int calcula_dac(void)
     {
         dac_calc = (forma[(fase>>8)&0x7f]);
         fase += frec;
-        dac_calc=(dac_calc*(Amp_int))/50;
+        dac_calc=(dac_calc*(Amp_int))/25;
         dac_calc+=2046;
     }
     return dac_calc;
@@ -189,7 +189,7 @@ void calcula_modo(void)
 
 int main(void)
 {
-    char i,j;
+    char i,j,Comm;
     HAL_conf_MC();
     initLCD();
     clearLCD();
@@ -208,9 +208,10 @@ int main(void)
     {
         if(Msg)
         {
-            manda_midi(Buff);
             Msg=0;
-            if(Buff[0]==0x80 || (Buff[0]==0x90 && Buff[2]==0))
+            manda_midi(Buff);
+            Comm=Buff[0]&0xF0;
+            if(Comm==0x80 || (Comm==0x90 && Buff[2]==0))
             {
                 if(Buff[1]==nota_act)
                 {
@@ -218,14 +219,26 @@ int main(void)
                     t_nota_off=0;
                 }
             }
-            else if(Buff[0]==0x90)
+            else if(Comm==0x90)
             {
                 nota_act=Buff[1];
                 frec=Freq[nota_act-OFFSET_NOTA];
                 fase=0;
                 nota=1;
                 t_nota=0;
-                Amp=0;
+                Amp=0.0;
+                Amp_int=0;
+            }
+            else if(Comm==PITCH)
+            {
+                if(Buff[2]>64) //Pitch up
+                {
+                    frec=Freq[nota_act-OFFSET_NOTA]+((Freq[nota_act+2-OFFSET_NOTA]-Freq[nota_act-OFFSET_NOTA])*(Buff[2]-64))/64;
+                }
+                else    //Pitch Down
+                {
+                    frec=Freq[nota_act-OFFSET_NOTA]+((Freq[nota_act-OFFSET_NOTA]-Freq[nota_act-2-OFFSET_NOTA])*(Buff[2]-64))/64;
+                }
             }
         }
         calcula_modo();
